@@ -5,7 +5,7 @@ Evm NFT Contract ( Testing : monad-nft ) with CryptoBureau
 # Monad Testnet NFT Contract Deployment Guide
 
 ```
-git clone https://github.com/CryptoBureau01/evm-nft-contract.git && cd evm-nft-contract.git
+cd $HOME && wget https://raw.githubusercontent.com/CryptoBureau01/evm-nft-contract/main/evm.sh && chmod +x evm.sh && ./evm.sh
 ```
 
 
