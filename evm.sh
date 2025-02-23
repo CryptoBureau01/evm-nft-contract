@@ -285,10 +285,7 @@ mint-nft() {
         exit 1
     fi
 
-    # Export mint amount as an environment variable
-    export MINT_AMOUNT="$MINT_AMOUNT"
-
-    # Run the mint function using Hardhat ✅ (NO Positional Argument Issue)
+    # Run the mint function using Hardhat with environment variable
     echo "[INFO] Minting $MINT_AMOUNT NFT(s)..."
     MINT_AMOUNT="$MINT_AMOUNT" npx hardhat run scripts/mint.js --network monadTestnet
 
