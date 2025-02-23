@@ -255,65 +255,64 @@ verify() {
 
 
 mint-nft() {
-    CONTRACT_DIR="/root/evm-nft-contract"
+    CONTRACT_DIR="/root/evm-nft-contract"  # Update path if needed
     ENV_FILE="$CONTRACT_DIR/.envUser"
 
     # Check if contract folder exists
     if [ ! -d "$CONTRACT_DIR" ]; then
-        echo "[ERROR] Contract folder '$CONTRACT_DIR' not found! Please run contract-setup first."
+        echo "[ERROR] Contract folder not found!"
         exit 1
     fi
 
     # Check if .envUser file exists
     if [ ! -f "$ENV_FILE" ]; then
-        echo "[ERROR] .envUser file not found! Please deploy the contract first."
+        echo "[ERROR] .envUser file not found!"
         exit 1
     fi
 
-    # Load contract address from .envUser
+    # Load environment variables
     unset CONTRACT_ADDRESS
     set -a
     source "$ENV_FILE"
     set +a
 
-    # Print and validate CONTRACT_ADDRESS
-    echo "[INFO] Checking CONTRACT_ADDRESS in .envUser..."
-    if [[ -z "$CONTRACT_ADDRESS" || ! "$CONTRACT_ADDRESS" =~ ^0x[a-fA-F0-9]{40}$ ]]; then
-        echo "[ERROR] CONTRACT_ADDRESS is missing or invalid in .envUser! Please deploy the contract first."
+    # Validate CONTRACT_ADDRESS
+    if [ -z "$CONTRACT_ADDRESS" ]; then
+        echo "[ERROR] CONTRACT_ADDRESS not set!"
         exit 1
-    else
-        echo "[INFO] CONTRACT_ADDRESS found: $CONTRACT_ADDRESS"
     fi
 
-    # Prompt user for private key securely
-    read -sp "Enter your private key: " PRIVATE_KEY
+    echo "[INFO] Checking CONTRACT_ADDRESS in .envUser..."
+    echo "[INFO] CONTRACT_ADDRESS found: $CONTRACT_ADDRESS"
+
+    # Ask for Private Key
+    read -s -p "Enter your private key: " PRIVATE_KEY
     echo ""
+    export PRIVATE_KEY  # Set as environment variable
 
-    # Ensure private key starts with 0x (auto-add if missing)
-    if [[ $PRIVATE_KEY != 0x* ]]; then
-        PRIVATE_KEY="0x$PRIVATE_KEY"
+    # Validate PRIVATE_KEY format
+    if [[ ! $PRIVATE_KEY =~ ^0x[a-fA-F0-9]{64}$ ]]; then
+        echo "[ERROR] Invalid PRIVATE_KEY format!"
+        exit 1
     fi
 
-    # Save private key to .envUser securely
-    echo "PRIVATE_KEY=$PRIVATE_KEY" >> "$ENV_FILE"
-    chmod 600 "$ENV_FILE" # Restrict permissions for security
-
-    # Print PRIVATE_KEY for confirmation
     echo "[INFO] PRIVATE_KEY saved successfully."
 
-    # Prompt user for mint quantity
-    read -p "Enter the number of NFTs to mint: " MINT_AMOUNT
-
-    # Validate mint amount (must be a positive integer)
-    if ! [[ "$MINT_AMOUNT" =~ ^[1-9][0-9]*$ ]]; then
-        echo "[ERROR] Invalid mint amount! Enter a positive number."
+    # Ask for number of NFTs to mint
+    read -p "Enter the number of NFTs to mint: " NUM_NFTS
+    if ! [[ "$NUM_NFTS" =~ ^[0-9]+$ ]]; then
+        echo "[ERROR] Invalid number!"
         exit 1
     fi
 
-    # Run the mint function using Hardhat
-    echo "[INFO] Minting $MINT_AMOUNT NFT(s)..."
-    if MINT_AMOUNT="$MINT_AMOUNT" npx hardhat run scripts/mint.js --network monadTestnet; then
-        echo "[SUCCESS] Minting completed successfully!"
+    echo "[INFO] Minting $NUM_NFTS NFT(s)..."
+
+    # **Navigate to Hardhat project folder before running commands**
+    cd "$CONTRACT_DIR" || { echo "[ERROR] Failed to enter contract directory"; exit 1; }
+
+    # Run Hardhat mint command
+    if npx hardhat run scripts/mint.js --network monadTestnet "$NUM_NFTS"; then
+        echo "[SUCCESS] Minting successful!"
     else
         echo "[ERROR] Minting failed! Check Hardhat logs for details."
         exit 1
@@ -322,6 +321,7 @@ mint-nft() {
     # Call master function at the end
     master
 }
+
 
 
 
