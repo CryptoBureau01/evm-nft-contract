@@ -159,6 +159,7 @@ compile-contract() {
 
 deploy-contract() {
     CONTRACT_DIR="/root/evm-nft-contract"
+    ENV_FILE="$CONTRACT_DIR/.envUser"
 
     # Check if the contract folder exists
     if [ ! -d "$CONTRACT_DIR" ]; then
@@ -166,16 +167,38 @@ deploy-contract() {
         exit 1
     fi
 
-    # Enter the contract folder
+    # Enter the contract directory
     cd "$CONTRACT_DIR" || { echo "[ERROR] Failed to enter contract directory"; exit 1; }
 
     echo "[INFO] Deploying the contract..."
     npx hardhat run scripts/deploy.js --network monadTestnet
 
-    # Load the new contract address from .env
-    source .envUser
-    echo "[INFO] Contract deployed at: $CONTRACT_ADDRESS"
+    # Check if .envUser exists before loading
+    if [ ! -f "$ENV_FILE" ]; then
+        echo "[ERROR] .envUser file not found! Deployment might have failed."
+        exit 1
+    fi
 
+    # Ensure .envUser file is readable and has correct permissions
+    chmod 666 "$ENV_FILE"
+
+    # Debugging: Print the file content before sourcing
+    echo "[DEBUG] Checking .envUser contents:"
+    cat "$ENV_FILE"
+
+    # Reload environment variables safely
+    unset CONTRACT_ADDRESS
+    set -a
+    source "$ENV_FILE"
+    set +a
+
+    # Verify CONTRACT_ADDRESS was loaded
+    if [ -z "$CONTRACT_ADDRESS" ]; then
+        echo "[ERROR] CONTRACT_ADDRESS not set! Check deploy.js for issues."
+        exit 1
+    fi
+
+    echo "[INFO] Contract successfully deployed at: $CONTRACT_ADDRESS"
     echo "[INFO] Deployment completed successfully!"
 
     # Call master function at the end
@@ -183,34 +206,45 @@ deploy-contract() {
 }
 
 
+
 verify() {
     CONTRACT_DIR="/root/evm-nft-contract"
     ENV_FILE="$CONTRACT_DIR/.envUser"
 
-    # Check if the directory exists
+    # Check if the contract directory exists
     if [ ! -d "$CONTRACT_DIR" ]; then
-        echo "[ERROR] Contract folder not found! Exiting..."
+        echo "[ERROR] Contract folder not found! Please ensure the contract is deployed."
         exit 1
     fi
 
-    # Check if .env file exists
+    # Check if .envUser file exists
     if [ ! -f "$ENV_FILE" ]; then
-        echo "[ERROR] .env file not found! Exiting..."
+        echo "[ERROR] .envUser file not found! Make sure the contract is deployed and saved."
         exit 1
     fi
 
-    # Load contract address from .env file
-    CONTRACT_ADDRESS=$(grep -oP '^CONTRACT_ADDRESS=\K.*' "$ENV_FILE")
+    # Ensure .envUser file is readable and set correct permissions
+    chmod 666 "$ENV_FILE"
 
-    # Check if CONTRACT_ADDRESS is empty
+    # Debugging: Print the .envUser file contents before sourcing
+    echo "[DEBUG] Checking .envUser contents:"
+    cat "$ENV_FILE"
+
+    # Load CONTRACT_ADDRESS safely
+    unset CONTRACT_ADDRESS
+    set -a
+    source "$ENV_FILE"
+    set +a
+
+    # Validate that CONTRACT_ADDRESS was loaded
     if [ -z "$CONTRACT_ADDRESS" ]; then
-        echo "[ERROR] CONTRACT_ADDRESS not found in .env file! Exiting..."
+        echo "[ERROR] CONTRACT_ADDRESS is missing in .envUser! Check the deployment script."
         exit 1
     fi
 
-    # Check if the address is valid (must start with 0x and be 42 characters long)
+    # Validate the format of CONTRACT_ADDRESS (should be 42 characters, starting with 0x)
     if [[ ! $CONTRACT_ADDRESS =~ ^0x[a-fA-F0-9]{40}$ ]]; then
-        echo "[ERROR] Invalid contract address format in .env file! Exiting..."
+        echo "[ERROR] Invalid CONTRACT_ADDRESS format in .envUser! Please verify."
         exit 1
     fi
 
@@ -219,9 +253,12 @@ verify() {
 
     # Run Hardhat verify command
     echo "[INFO] Verifying contract on MonadTestnet..."
-    npx hardhat verify --network monadTestnet "$CONTRACT_ADDRESS"
-
-    echo "[INFO] Contract verification process completed!"
+    if npx hardhat verify --network monadTestnet "$CONTRACT_ADDRESS"; then
+        echo "[SUCCESS] Contract verification completed successfully!"
+    else
+        echo "[ERROR] Contract verification failed! Check logs for details."
+        exit 1
+    fi
 
     # Call master function at the end
     master
@@ -229,10 +266,10 @@ verify() {
 
 
 
+
 mint-nft() {
     CONTRACT_DIR="/root/evm-nft-contract"
     ENV_FILE="$CONTRACT_DIR/.envUser"
-    ENV_USER_FILE="$CONTRACT_DIR/.envUser"
 
     # Check if contract folder exists
     if [ ! -d "$CONTRACT_DIR" ]; then
@@ -240,57 +277,63 @@ mint-nft() {
         exit 1
     fi
 
-    # Check if .env file exists
+    # Check if .envUser file exists
     if [ ! -f "$ENV_FILE" ]; then
-        echo "[ERROR] .env file not found! Exiting..."
+        echo "[ERROR] .envUser file not found! Please deploy the contract first."
         exit 1
     fi
 
-    # Load contract address from .env file
-    CONTRACT_ADDRESS=$(grep -oP '^CONTRACT_ADDRESS=\K.*' "$ENV_FILE")
+    # Load contract address from .envUser
+    unset CONTRACT_ADDRESS
+    set -a
+    source "$ENV_FILE"
+    set +a
 
-    # Check if CONTRACT_ADDRESS is empty
-    if [ -z "$CONTRACT_ADDRESS" ]; then
-        echo "[ERROR] CONTRACT_ADDRESS not found in .env file! Exiting..."
+    # Validate CONTRACT_ADDRESS
+    if [[ -z "$CONTRACT_ADDRESS" || ! "$CONTRACT_ADDRESS" =~ ^0x[a-fA-F0-9]{40}$ ]]; then
+        echo "[ERROR] Invalid or missing CONTRACT_ADDRESS in .envUser! Check deployment."
         exit 1
     fi
 
-    # Check if the address is valid (must start with 0x and be 42 characters long)
-    if [[ ! $CONTRACT_ADDRESS =~ ^0x[a-fA-F0-9]{40}$ ]]; then
-        echo "[ERROR] Invalid contract address format in .env file! Exiting..."
-        exit 1
-    fi
-
-    # Enter the contract folder
+    # Navigate to contract directory
     cd "$CONTRACT_DIR" || { echo "[ERROR] Failed to enter contract directory"; exit 1; }
 
-    # Prompt user for private key
+    # Prompt user for private key securely
     read -sp "Enter your private key: " PRIVATE_KEY
     echo ""
 
-    # Ensure private key starts with 0x
-    if [[ $PRIVATE_KEY != 0x* ]]; then
-        PRIVATE_KEY="0x$PRIVATE_KEY"
+    # Ensure the private key starts with "0x"
+    if [[ ! "$PRIVATE_KEY" =~ ^0x[a-fA-F0-9]{64}$ ]]; then
+        echo "[ERROR] Invalid private key format! Please check and try again."
+        exit 1
     fi
 
-    # Save private key to .envUser file
-    echo "PRIVATE_KEY=$PRIVATE_KEY" > "$ENV_USER_FILE"
+    # Save private key to .envUser securely
+    echo "PRIVATE_KEY=$PRIVATE_KEY" >> "$ENV_FILE"
+    chmod 600 "$ENV_FILE" # Restrict permissions for security
 
     # Prompt user for mint quantity
     read -p "Enter the number of NFTs to mint: " MINT_AMOUNT
 
-    # Validate mint amount (must be a number)
-    if ! [[ "$MINT_AMOUNT" =~ ^[0-9]+$ ]]; then
-        echo "[ERROR] Invalid number! Please enter a valid integer."
+    # Validate mint amount (must be a positive integer)
+    if ! [[ "$MINT_AMOUNT" =~ ^[1-9][0-9]*$ ]]; then
+        echo "[ERROR] Invalid mint amount! Enter a positive number."
         exit 1
     fi
 
-    # Run the mint function using Hardhat with environment variable
+    # Run the mint function using Hardhat
     echo "[INFO] Minting $MINT_AMOUNT NFT(s)..."
-    MINT_AMOUNT="$MINT_AMOUNT" npx hardhat run scripts/mint.js --network monadTestnet
+    if MINT_AMOUNT="$MINT_AMOUNT" npx hardhat run scripts/mint.js --network monadTestnet; then
+        echo "[SUCCESS] Minting completed successfully!"
+    else
+        echo "[ERROR] Minting failed! Check Hardhat logs for details."
+        exit 1
+    fi
 
-    echo "[INFO] Minting process completed!"
+    # Call master function at the end
+    master
 }
+
 
 
 
