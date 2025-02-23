@@ -87,44 +87,35 @@ install_dependency() {
 }
 
 
-# Function to set up contract environment
 contract-setup() {
-    CONTRACT_DIR="/root/contract"
+    echo "[INFO] Cloning contract repository..."
+    git clone https://github.com/CryptoBureau01/evm-nft-contract.git
 
-    echo "[INFO] Setting up contract environment..."
+    cd evm-nft-contract || { echo "[ERROR] Failed to enter directory"; exit 1; }
 
-    # Check if the directory already exists
-    if [ -d "$CONTRACT_DIR" ]; then
-        echo "[ERROR] Folder '/root/contract' already exists. Exiting..."
-        exit 1
-    fi
-
-    # Create the contract directory
-    echo "[INFO] Creating contract directory..."
-    mkdir -p "$CONTRACT_DIR"
-    cd "$CONTRACT_DIR" || exit
-
-    # Initialize Hardhat project
-    echo "[INFO] Installing Hardhat..."
-    npm init -y
-    npm install --save-dev hardhat
-
-    # Create Hardhat project
-    echo "[INFO] Setting up Hardhat..."
-    npx hardhat init --force
-
-    # Create .env file
     echo "[INFO] Creating .env file..."
 
     # Prompt user for private key
-    read -sp "Enter your private key: " PRIVATE_KEY
+    read -sp "Enter your private key (starting with 0x): " PRIVATE_KEY
     echo ""
+
+    # Validate private key format
+    if [[ ! $PRIVATE_KEY =~ ^0x[a-fA-F0-9]{64}$ ]]; then
+        echo "[ERROR] Invalid private key format!"
+        exit 1
+    fi
 
     # Save private key to .env file
     echo "PRIVATE_KEY=$PRIVATE_KEY" > .env
-    echo "[INFO] PRIVATE KEY SAVED SUCCESSFULLY."
+    echo "[INFO] Private key saved successfully."
+
+    echo "[INFO] Installing dependencies..."
+    npm install
 
     echo "[INFO] Contract setup completed successfully!"
+
+    # Call master function at the end
+    master
 }
 
 
