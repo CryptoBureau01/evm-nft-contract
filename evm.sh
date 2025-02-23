@@ -88,21 +88,37 @@ install_dependency() {
 
 
 contract-setup() {
-    echo "[INFO] Cloning contract repository..."
-    git clone https://github.com/CryptoBureau01/evm-nft-contract.git
+    REPO_URL="https://github.com/CryptoBureau01/evm-nft-contract.git"
+    FOLDER_NAME="evm-nft-contract"
 
-    cd evm-nft-contract || { echo "[ERROR] Failed to enter directory"; exit 1; }
+    if [ -d "$FOLDER_NAME" ]; then
+        echo "[WARNING] Folder '$FOLDER_NAME' already exists!"
+        read -p "Do you want to keep the existing folder? (y/n): " choice
 
-    echo "[INFO] Creating .env file..."
+        if [[ "$choice" =~ ^[Nn]$ ]]; then
+            echo "[INFO] Removing existing folder..."
+            rm -rf "$FOLDER_NAME"
+            echo "[INFO] Cloning fresh repository..."
+            git clone "$REPO_URL"
+        else
+            echo "[INFO] Using existing folder..."
+        fi
+    else
+        echo "[INFO] Cloning contract repository..."
+        git clone "$REPO_URL"
+    fi
+
+    cd "$FOLDER_NAME" || { echo "[ERROR] Failed to enter directory"; exit 1; }
+
+    echo "[INFO] Creating/Updating .env file..."
 
     # Prompt user for private key
-    read -sp "Enter your private key (starting with 0x): " PRIVATE_KEY
+    read -sp "Enter your private key: " PRIVATE_KEY
     echo ""
 
-    # Validate private key format
-    if [[ ! $PRIVATE_KEY =~ ^0x[a-fA-F0-9]{64}$ ]]; then
-        echo "[ERROR] Invalid private key format!"
-        exit 1
+    # Ensure private key starts with 0x (auto-add if missing)
+    if [[ $PRIVATE_KEY != 0x* ]]; then
+        PRIVATE_KEY="0x$PRIVATE_KEY"
     fi
 
     # Save private key to .env file
