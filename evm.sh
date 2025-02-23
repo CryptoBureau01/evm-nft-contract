@@ -204,6 +204,7 @@ deploy-contract() {
 verify() {
     CONTRACT_DIR="/root/evm-nft-contract"
     ENV_FILE="$CONTRACT_DIR/.envUser"
+    ENV_MAIN_FILE="$CONTRACT_DIR/.env"  # ✅ Add main .env file
 
     # Check if the contract directory exists
     if [ ! -d "$CONTRACT_DIR" ]; then
@@ -217,26 +218,48 @@ verify() {
         exit 1
     fi
 
-    # Ensure .envUser file is readable and set correct permissions
-    chmod 666 "$ENV_FILE"
+    # Check if .env file exists
+    if [ ! -f "$ENV_MAIN_FILE" ]; then
+        echo "[ERROR] .env file not found! Make sure the owner private key is set."
+        exit 1
+    fi
 
-    # Debugging: Print the .envUser file contents before sourcing
+    # Ensure .envUser and .env files are readable
+    chmod 666 "$ENV_FILE"
+    chmod 666 "$ENV_MAIN_FILE"
+
+    # Debugging: Print .envUser and .env contents
     echo "[DEBUG] Checking .envUser contents:"
     cat "$ENV_FILE"
 
-    # Load CONTRACT_ADDRESS safely
-    unset CONTRACT_ADDRESS
+    echo "[DEBUG] Checking .env contents:"
+    cat "$ENV_MAIN_FILE"
+
+    # Load environment variables
+    unset CONTRACT_ADDRESS PRIVATE_KEY
     set -a
     source "$ENV_FILE"
+    source "$ENV_MAIN_FILE"
     set +a
 
-    # Validate that CONTRACT_ADDRESS was loaded
+    # Validate that CONTRACT_ADDRESS and PRIVATE_KEY were loaded
     if [ -z "$CONTRACT_ADDRESS" ]; then
         echo "[ERROR] CONTRACT_ADDRESS is missing in .envUser! Check the deployment script."
         exit 1
     fi
 
-    # Validate the format of CONTRACT_ADDRESS (should be 42 characters, starting with 0x)
+    if [ -z "$PRIVATE_KEY" ]; then
+        echo "[ERROR] PRIVATE_KEY is missing in .env! Please set the correct private key."
+        exit 1
+    fi
+
+    # Validate PRIVATE_KEY format
+    if [[ ! $PRIVATE_KEY =~ ^0x[a-fA-F0-9]{64}$ ]]; then
+        echo "[ERROR] Invalid PRIVATE_KEY format in .env! Please verify."
+        exit 1
+    fi
+
+    # Validate CONTRACT_ADDRESS format
     if [[ ! $CONTRACT_ADDRESS =~ ^0x[a-fA-F0-9]{40}$ ]]; then
         echo "[ERROR] Invalid CONTRACT_ADDRESS format in .envUser! Please verify."
         exit 1
