@@ -1,4 +1,5 @@
 require("@nomicfoundation/hardhat-toolbox-viem");
+require("@nomicfoundation/hardhat-ethers"); // Ensure this is included
 require("dotenv").config(); // Load environment variables
 
 module.exports = {
