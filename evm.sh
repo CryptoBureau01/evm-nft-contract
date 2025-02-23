@@ -254,64 +254,31 @@ verify() {
 
 
 
-mint-nft() {
-    CONTRACT_DIR="/root/evm-nft-contract"  # Update path if needed
+mint_nft() {
+    CONTRACT_DIR="/root/evm-nft-contract"
     ENV_FILE="$CONTRACT_DIR/.envUser"
 
-    # Check if contract folder exists
-    if [ ! -d "$CONTRACT_DIR" ]; then
-        echo "[ERROR] Contract folder not found!"
-        exit 1
-    fi
-
-    # Check if .envUser file exists
-    if [ ! -f "$ENV_FILE" ]; then
-        echo "[ERROR] .envUser file not found!"
-        exit 1
-    fi
-
-    # Load environment variables
-    unset CONTRACT_ADDRESS
-    set -a
+    # Load CONTRACT_ADDRESS from .envUser
     source "$ENV_FILE"
-    set +a
-
-    # Validate CONTRACT_ADDRESS
-    if [ -z "$CONTRACT_ADDRESS" ]; then
-        echo "[ERROR] CONTRACT_ADDRESS not set!"
-        exit 1
-    fi
 
     echo "[INFO] Checking CONTRACT_ADDRESS in .envUser..."
     echo "[INFO] CONTRACT_ADDRESS found: $CONTRACT_ADDRESS"
 
-    # Ask for Private Key
-    read -s -p "Enter your private key: " PRIVATE_KEY
+    # Prompt the user to enter their private key
+    read -s -p "Enter your private key: " USER_PRIVATE_KEY
     echo ""
-    export PRIVATE_KEY  # Set as environment variable
 
-    # Ensure private key starts with 0x (auto-add if missing)
-    if [[ $PRIVATE_KEY != 0x* ]]; then
-        PRIVATE_KEY="0x$PRIVATE_KEY"
-    fi
+    # Save the private key in .envUser, ensuring it starts with 0x
+    sed -i "s|^PRIVATE_KEY=.*|PRIVATE_KEY=0x$USER_PRIVATE_KEY|" "$ENV_FILE"
 
-    echo "[INFO] PRIVATE_KEY saved successfully."
+    # Prompt the user to enter the number of NFTs to mint
+    read -p "Enter the number of NFTs to mint: " NFT_COUNT
+    echo "[INFO] Minting $NFT_COUNT NFT(s)..."
 
-    # Ask for number of NFTs to mint
-    read -p "Enter the number of NFTs to mint: " NUM_NFTS
-    if ! [[ "$NUM_NFTS" =~ ^[0-9]+$ ]]; then
-        echo "[ERROR] Invalid number!"
-        exit 1
-    fi
-
-    echo "[INFO] Minting $NUM_NFTS NFT(s)..."
-
-    # **Navigate to Hardhat project folder before running commands**
+    # Start the minting process
     cd "$CONTRACT_DIR" || { echo "[ERROR] Failed to enter contract directory"; exit 1; }
-
-    # Run Hardhat mint command
-    if npx hardhat run scripts/mint.js --network monadTestnet "$NUM_NFTS"; then
-        echo "[SUCCESS] Minting successful!"
+    if npx hardhat run scripts/mint.js --network monadTestnet --nft-count "$NFT_COUNT"; then
+        echo "[SUCCESS] $NFT_COUNT NFT(s) minted successfully!"
     else
         echo "[ERROR] Minting failed! Check Hardhat logs for details."
         exit 1
@@ -369,7 +336,7 @@ master() {
             verify
             ;;
         6)
-            mint-nft
+            mint_nft
             ;;
         7)
             exit 0  # Exit the script after breaking the loop
