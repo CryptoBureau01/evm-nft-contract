@@ -173,37 +173,31 @@ deploy-contract() {
     echo "[INFO] Deploying the contract..."
     npx hardhat run scripts/deploy.js --network monadTestnet
 
-    # Check if .envUser exists before loading
+    # Check if .envUser exists after deployment
     if [ ! -f "$ENV_FILE" ]; then
         echo "[ERROR] .envUser file not found! Deployment might have failed."
         exit 1
     fi
 
-    # Ensure .envUser file is readable and has correct permissions
-    chmod 666 "$ENV_FILE"
-
-    # Debugging: Print the file content before sourcing
-    echo "[DEBUG] Checking .envUser contents:"
-    cat "$ENV_FILE"
-
-    # Reload environment variables safely
+    # Load CONTRACT_ADDRESS from .envUser
     unset CONTRACT_ADDRESS
     set -a
     source "$ENV_FILE"
     set +a
 
-    # Verify CONTRACT_ADDRESS was loaded
-    if [ -z "$CONTRACT_ADDRESS" ]; then
-        echo "[ERROR] CONTRACT_ADDRESS not set! Check deploy.js for issues."
+    # Verify CONTRACT_ADDRESS was set and print it
+    if [[ -n "$CONTRACT_ADDRESS" && "$CONTRACT_ADDRESS" =~ ^0x[a-fA-F0-9]{40}$ ]]; then
+        echo "[SUCCESS] Contract deployed successfully!"
+        echo "[INFO] Contract Address: $CONTRACT_ADDRESS"
+    else
+        echo "[ERROR] CONTRACT_ADDRESS missing in .envUser! Check deployment."
         exit 1
     fi
-
-    echo "[INFO] Contract successfully deployed at: $CONTRACT_ADDRESS"
-    echo "[INFO] Deployment completed successfully!"
 
     # Call master function at the end
     master
 }
+
 
 
 
