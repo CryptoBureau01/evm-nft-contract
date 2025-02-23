@@ -289,14 +289,14 @@ mint-nft() {
     source "$ENV_FILE"
     set +a
 
-    # Validate CONTRACT_ADDRESS
+    # Print and validate CONTRACT_ADDRESS
+    echo "[INFO] Checking CONTRACT_ADDRESS in .envUser..."
     if [[ -z "$CONTRACT_ADDRESS" || ! "$CONTRACT_ADDRESS" =~ ^0x[a-fA-F0-9]{40}$ ]]; then
-        echo "[ERROR] Invalid or missing CONTRACT_ADDRESS in .envUser! Check deployment."
+        echo "[ERROR] CONTRACT_ADDRESS is missing or invalid in .envUser! Please deploy the contract first."
         exit 1
+    else
+        echo "[INFO] CONTRACT_ADDRESS found: $CONTRACT_ADDRESS"
     fi
-
-    # Navigate to contract directory
-    cd "$CONTRACT_DIR" || { echo "[ERROR] Failed to enter contract directory"; exit 1; }
 
     # Prompt user for private key securely
     read -sp "Enter your private key: " PRIVATE_KEY
@@ -311,6 +311,9 @@ mint-nft() {
     # Save private key to .envUser securely
     echo "PRIVATE_KEY=$PRIVATE_KEY" >> "$ENV_FILE"
     chmod 600 "$ENV_FILE" # Restrict permissions for security
+
+    # Print PRIVATE_KEY for confirmation
+    echo "[INFO] PRIVATE_KEY saved successfully."
 
     # Prompt user for mint quantity
     read -p "Enter the number of NFTs to mint: " MINT_AMOUNT
@@ -333,6 +336,7 @@ mint-nft() {
     # Call master function at the end
     master
 }
+
 
 
 
