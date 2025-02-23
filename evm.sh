@@ -285,11 +285,14 @@ mint-nft() {
         exit 1
     fi
 
-    # Run the mint function using Hardhat
+    # Run the mint function using Hardhat (✅ FIXED COMMAND)
     echo "[INFO] Minting $MINT_AMOUNT NFT(s)..."
-    npx hardhat run scripts/mint.js --network monadTestnet --amount "$MINT_AMOUNT"
+    npx hardhat run scripts/mint.js --network monadTestnet "$MINT_AMOUNT"
 
     echo "[INFO] Minting process completed!"
+
+    # Call master function at the end
+    master
 }
 
 
