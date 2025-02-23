@@ -5,8 +5,11 @@ Evm NFT Contract ( Testing : monad-nft ) with CryptoBureau
 # Monad Testnet NFT Contract Deployment Guide
 
 ## Prerequisites
+Prerequisites
 
-Before starting, ensure you have Node.js and npm installed:
+Before starting, the user should add their private key to the `.env` file. This should be the private key of the wallet that will be used to deploy the contract.
+
+Ensure you have Node.js and npm installed:
 ```sh
 node -v   # Check Node.js version
 npm -v    # Check npm version
