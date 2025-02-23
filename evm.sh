@@ -306,6 +306,7 @@ master() {
     print_info "3. Compile-Contract"
     print_info "4. Deploy-Contract"
     print_info "5. Verify-Contract"
+    print_info ""
     print_info "!=============================!"
     print_info ""
     print_info "6. Mint-NFT"
