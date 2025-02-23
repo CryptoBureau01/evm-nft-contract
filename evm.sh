@@ -290,10 +290,9 @@ mint-nft() {
     echo ""
     export PRIVATE_KEY  # Set as environment variable
 
-    # Validate PRIVATE_KEY format
-    if [[ ! $PRIVATE_KEY =~ ^0x[a-fA-F0-9]{64}$ ]]; then
-        echo "[ERROR] Invalid PRIVATE_KEY format!"
-        exit 1
+    # Ensure private key starts with 0x (auto-add if missing)
+    if [[ $PRIVATE_KEY != 0x* ]]; then
+        PRIVATE_KEY="0x$PRIVATE_KEY"
     fi
 
     echo "[INFO] PRIVATE_KEY saved successfully."
