@@ -172,6 +172,10 @@ deploy-contract() {
     echo "[INFO] Deploying the contract..."
     npx hardhat run scripts/deploy.js --network monadTestnet
 
+    # Load the new contract address from .env
+    source .env
+    echo "[INFO] Contract deployed at: $CONTRACT_ADDRESS"
+
     echo "[INFO] Deployment completed successfully!"
 
     # Call master function at the end
@@ -181,6 +185,7 @@ deploy-contract() {
 
 verify() {
     CONTRACT_DIR="/root/evm-nft-contract"
+    ENV_FILE="$CONTRACT_DIR/.env"
 
     # Check if the directory exists
     if [ ! -d "$CONTRACT_DIR" ]; then
@@ -188,17 +193,29 @@ verify() {
         exit 1
     fi
 
-    # Navigate to the contract directory
-    cd "$CONTRACT_DIR" || { echo "[ERROR] Failed to enter contract directory"; exit 1; }
-
-    # Prompt user to enter the deployed contract address
-    read -p "Enter the deployed contract address: " CONTRACT_ADDRESS
-
-    # Check if the entered address is valid (must start with 0x and be 42 characters long)
-    if [[ ! $CONTRACT_ADDRESS =~ ^0x[a-fA-F0-9]{40}$ ]]; then
-        echo "[ERROR] Invalid contract address format! Exiting..."
+    # Check if .env file exists
+    if [ ! -f "$ENV_FILE" ]; then
+        echo "[ERROR] .env file not found! Exiting..."
         exit 1
     fi
+
+    # Load contract address from .env file
+    CONTRACT_ADDRESS=$(grep -oP '^CONTRACT_ADDRESS=\K.*' "$ENV_FILE")
+
+    # Check if CONTRACT_ADDRESS is empty
+    if [ -z "$CONTRACT_ADDRESS" ]; then
+        echo "[ERROR] CONTRACT_ADDRESS not found in .env file! Exiting..."
+        exit 1
+    fi
+
+    # Check if the address is valid (must start with 0x and be 42 characters long)
+    if [[ ! $CONTRACT_ADDRESS =~ ^0x[a-fA-F0-9]{40}$ ]]; then
+        echo "[ERROR] Invalid contract address format in .env file! Exiting..."
+        exit 1
+    fi
+
+    # Navigate to the contract directory
+    cd "$CONTRACT_DIR" || { echo "[ERROR] Failed to enter contract directory"; exit 1; }
 
     # Run Hardhat verify command
     echo "[INFO] Verifying contract on MonadTestnet..."
@@ -210,6 +227,70 @@ verify() {
     master
 }
 
+
+
+mint-nft() {
+    CONTRACT_DIR="/root/evm-nft-contract"
+    ENV_FILE="$CONTRACT_DIR/.env"
+    ENV_USER_FILE="$CONTRACT_DIR/.envUser"
+
+    # Check if contract folder exists
+    if [ ! -d "$CONTRACT_DIR" ]; then
+        echo "[ERROR] Contract folder '$CONTRACT_DIR' not found! Please run contract-setup first."
+        exit 1
+    fi
+
+    # Check if .env file exists
+    if [ ! -f "$ENV_FILE" ]; then
+        echo "[ERROR] .env file not found! Exiting..."
+        exit 1
+    fi
+
+    # Load contract address from .env file
+    CONTRACT_ADDRESS=$(grep -oP '^CONTRACT_ADDRESS=\K.*' "$ENV_FILE")
+
+    # Check if CONTRACT_ADDRESS is empty
+    if [ -z "$CONTRACT_ADDRESS" ]; then
+        echo "[ERROR] CONTRACT_ADDRESS not found in .env file! Exiting..."
+        exit 1
+    fi
+
+    # Check if the address is valid (must start with 0x and be 42 characters long)
+    if [[ ! $CONTRACT_ADDRESS =~ ^0x[a-fA-F0-9]{40}$ ]]; then
+        echo "[ERROR] Invalid contract address format in .env file! Exiting..."
+        exit 1
+    fi
+
+    # Enter the contract folder
+    cd "$CONTRACT_DIR" || { echo "[ERROR] Failed to enter contract directory"; exit 1; }
+
+    # Prompt user for private key
+    read -sp "Enter your private key: " PRIVATE_KEY
+    echo ""
+
+    # Ensure private key starts with 0x
+    if [[ $PRIVATE_KEY != 0x* ]]; then
+        PRIVATE_KEY="0x$PRIVATE_KEY"
+    fi
+
+    # Save private key to .envUser file
+    echo "PRIVATE_KEY=$PRIVATE_KEY" > "$ENV_USER_FILE"
+
+    # Prompt user for mint quantity
+    read -p "Enter the number of NFTs to mint: " MINT_AMOUNT
+
+    # Validate mint amount (must be a number)
+    if ! [[ "$MINT_AMOUNT" =~ ^[0-9]+$ ]]; then
+        echo "[ERROR] Invalid number! Please enter a valid integer."
+        exit 1
+    fi
+
+    # Run the mint function using Hardhat
+    echo "[INFO] Minting $MINT_AMOUNT NFT(s)..."
+    npx hardhat run scripts/mint.js --network monadTestnet --amount "$MINT_AMOUNT"
+
+    echo "[INFO] Minting process completed!"
+}
 
 
 
