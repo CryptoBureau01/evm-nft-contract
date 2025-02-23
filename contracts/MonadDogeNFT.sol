@@ -10,7 +10,7 @@ contract MonadDogeNFT is ERC721URIStorage, Ownable {
     uint256 private _tokenIdCounter = 0; // NFT ID tracker
     string public baseURI = "https://gateway.pinata.cloud/ipfs/bafybeig7ckgnpsqefislvfye7gqmoun46w76a355tdxbmmlgms4bl25dsy/";
 
-    constructor(uint256 _maxSupply) ERC721("xMonadDoge", "xMDOGE") Ownable(msg.sender) {
+    constructor(uint256 _maxSupply) ERC721("MonadDoge", "MDOGE") Ownable(msg.sender) {
         maxSupply = _maxSupply;  // Owner sets supply at deployment
     }
 
