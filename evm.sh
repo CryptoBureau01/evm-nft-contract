@@ -306,8 +306,10 @@ master() {
     print_info "3. Compile-Contract"
     print_info "4. Deploy-Contract"
     print_info "5. Verify-Contract"
+    print_info "!=============================!"
     print_info ""
-    print_info "6. Exit"
+    print_info "6. Mint-NFT"
+    print_info "7. Exit"
     print_info ""
     print_info "==============================="
     print_info " Created By : CB-Master "
@@ -333,6 +335,9 @@ master() {
             verify
             ;;
         6)
+            mint-nft
+            ;;
+        7)
             exit 0  # Exit the script after breaking the loop
             ;;
         *)
