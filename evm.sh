@@ -135,9 +135,80 @@ contract-setup() {
 }
 
 
+compile-contract() {
+    CONTRACT_DIR="/root/evm-nft-contract"
+
+    # Check if the contract folder exists
+    if [ ! -d "$CONTRACT_DIR" ]; then
+        echo "[ERROR] Contract folder '$CONTRACT_DIR' not found! Please run contract-setup first."
+        exit 1
+    fi
+
+    # Enter the contract folder
+    cd "$CONTRACT_DIR" || { echo "[ERROR] Failed to enter contract directory"; exit 1; }
+
+    echo "[INFO] Compiling the contract..."
+    npx hardhat compile
+
+    echo "[INFO] Compilation completed successfully!"
+
+    # Call master function at the end
+    master
+}
 
 
+deploy-contract() {
+    CONTRACT_DIR="/root/evm-nft-contract"
 
+    # Check if the contract folder exists
+    if [ ! -d "$CONTRACT_DIR" ]; then
+        echo "[ERROR] Contract folder '$CONTRACT_DIR' not found! Please run contract-setup first."
+        exit 1
+    fi
+
+    # Enter the contract folder
+    cd "$CONTRACT_DIR" || { echo "[ERROR] Failed to enter contract directory"; exit 1; }
+
+    echo "[INFO] Deploying the contract..."
+    npx hardhat run scripts/deploy.js --network monadTestnet
+
+    echo "[INFO] Deployment completed successfully!"
+
+    # Call master function at the end
+    master
+}
+
+
+verify() {
+    CONTRACT_DIR="/root/evm-nft-contract"
+
+    # Check if the directory exists
+    if [ ! -d "$CONTRACT_DIR" ]; then
+        echo "[ERROR] Contract folder not found! Exiting..."
+        exit 1
+    fi
+
+    # Navigate to the contract directory
+    cd "$CONTRACT_DIR" || { echo "[ERROR] Failed to enter contract directory"; exit 1; }
+
+    # Prompt user to enter the deployed contract address
+    read -p "Enter the deployed contract address: " CONTRACT_ADDRESS
+
+    # Check if the entered address is valid (must start with 0x and be 42 characters long)
+    if [[ ! $CONTRACT_ADDRESS =~ ^0x[a-fA-F0-9]{40}$ ]]; then
+        echo "[ERROR] Invalid contract address format! Exiting..."
+        exit 1
+    fi
+
+    # Run Hardhat verify command
+    echo "[INFO] Verifying contract on MonadTestnet..."
+    npx hardhat verify --network monadTestnet "$CONTRACT_ADDRESS"
+
+    echo "[INFO] Contract verification process completed!"
+
+    # Call master function at the end
+    master
+}
 
 
 
@@ -153,19 +224,16 @@ master() {
     print_info "2. Contract-Setup"
     print_info "3. Compile-Contract"
     print_info "4. Deploy-Contract"
-    print_info "5. Verfiy-Contract"
-    print_info "6. "
-    print_info "7. "
-    print_info "8. "
-    print_info "9. "
-    
+    print_info "5. Verify-Contract"
+    print_info ""
+    print_info "6. Exit"
     print_info ""
     print_info "==============================="
     print_info " Created By : CB-Master "
     print_info "==============================="
     print_info ""
     
-    read -p "Enter your choice (1 or 3): " user_choice
+    read -p "Enter your choice (1 or 6): " user_choice
 
     case $user_choice in
         1)
@@ -175,25 +243,19 @@ master() {
             contract-setup
             ;;
         3) 
-
+            compile-contract
             ;;
         4)
-
+            deploy-contract
             ;;
         5)
-
+            verify
             ;;
         6)
-
-            ;;
-        7)
-
-            ;;
-        8)
             exit 0  # Exit the script after breaking the loop
             ;;
         *)
-            print_error "Invalid choice. Please enter 1 or 3 : "
+            print_error "Invalid choice. Please enter 1 or 6 : "
             ;;
     esac
 }
