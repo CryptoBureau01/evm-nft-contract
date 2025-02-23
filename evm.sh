@@ -173,7 +173,7 @@ deploy-contract() {
     npx hardhat run scripts/deploy.js --network monadTestnet
 
     # Load the new contract address from .env
-    source .env
+    source .envUser
     echo "[INFO] Contract deployed at: $CONTRACT_ADDRESS"
 
     echo "[INFO] Deployment completed successfully!"
@@ -185,7 +185,7 @@ deploy-contract() {
 
 verify() {
     CONTRACT_DIR="/root/evm-nft-contract"
-    ENV_FILE="$CONTRACT_DIR/.env"
+    ENV_FILE="$CONTRACT_DIR/.envUser"
 
     # Check if the directory exists
     if [ ! -d "$CONTRACT_DIR" ]; then
@@ -231,7 +231,7 @@ verify() {
 
 mint-nft() {
     CONTRACT_DIR="/root/evm-nft-contract"
-    ENV_FILE="$CONTRACT_DIR/.env"
+    ENV_FILE="$CONTRACT_DIR/.envUser"
     ENV_USER_FILE="$CONTRACT_DIR/.envUser"
 
     # Check if contract folder exists
@@ -318,7 +318,7 @@ master() {
     print_info "==============================="
     print_info ""
     
-    read -p "Enter your choice (1 or 6): " user_choice
+    read -p "Enter your choice (1 or 7): " user_choice
 
     case $user_choice in
         1)
@@ -343,7 +343,7 @@ master() {
             exit 0  # Exit the script after breaking the loop
             ;;
         *)
-            print_error "Invalid choice. Please enter 1 or 6 : "
+            print_error "Invalid choice. Please enter 1 or 7 : "
             ;;
     esac
 }
