@@ -37,14 +37,13 @@ contract MonadDogeNFT is ERC721URIStorage, Ownable {
         require(msg.value >= mintPrice * quantity, "Insufficient funds");
 
         for (uint256 i = 0; i < quantity; i++) {
-            uint256 newTokenId = _tokenIdCounter;
-            _tokenIdCounter++;
-
-            string memory tokenURI = string(abi.encodePacked(baseURI, uint2str(newTokenId), ".json"));
+            uint256 newTokenId = _tokenIdCounter + i; // Fix: Ensure token ID increments correctly
 
             _safeMint(msg.sender, newTokenId); // Transfer NFT to minter
-            _setTokenURI(newTokenId, tokenURI);
+            _setTokenURI(newTokenId, string(abi.encodePacked(baseURI, uint2str(newTokenId), ".json")));
         }
+
+        _tokenIdCounter += quantity; // Fix: Ensure _tokenIdCounter updates after minting
 
         // 🔹 Automatically send mint fee to owner
         payable(owner()).transfer(msg.value);
