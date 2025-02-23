@@ -16,26 +16,27 @@ async function main() {
   const contractAddress = await monadDoge.getAddress();
   console.log(`✅ MonadDogeNFT deployed at: ${contractAddress}`);
 
-  // ✅ Save contract address to .env file
-  const envFilePath = ".env";
-  let envConfig = "";
-  
-  if (fs.existsSync(envFilePath)) {
-    envConfig = fs.readFileSync(envFilePath, "utf8");
+  // ✅ Save contract address to .envUser file
+  const envUserFilePath = ".envUser";
+  let envUserConfig = "";
+
+  if (fs.existsSync(envUserFilePath)) {
+    envUserConfig = fs.readFileSync(envUserFilePath, "utf8");
   }
 
   // Replace existing CONTRACT_ADDRESS or add it
-  if (envConfig.includes("CONTRACT_ADDRESS=")) {
-    envConfig = envConfig.replace(/CONTRACT_ADDRESS=.*/g, `CONTRACT_ADDRESS=${contractAddress}`);
+  if (envUserConfig.includes("CONTRACT_ADDRESS=")) {
+    envUserConfig = envUserConfig.replace(/CONTRACT_ADDRESS=.*/g, `CONTRACT_ADDRESS=${contractAddress}`);
   } else {
-    envConfig += `\nCONTRACT_ADDRESS=${contractAddress}`;
+    envUserConfig += `\nCONTRACT_ADDRESS=${contractAddress}`;
   }
 
-  fs.writeFileSync(envFilePath, envConfig, "utf8");
-  console.log("✅ Contract address saved to .env file!");
+  fs.writeFileSync(envUserFilePath, envUserConfig, "utf8");
+  console.log("✅ Contract address saved to .envUser file!");
 }
 
 main().catch((error) => {
   console.error("❌ Deployment failed:", error);
   process.exitCode = 1;
 });
+
