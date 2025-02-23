@@ -3,7 +3,7 @@ const fs = require("fs");
 const { ethers } = require("hardhat");
 
 async function main() {
-  const maxSupply = 5000; // Set your max supply
+  const maxSupply = 50000000000000; // Set your max supply
 
   const MonadDogeNFT = await ethers.getContractFactory("MonadDogeNFT");
   const monadDoge = await MonadDogeNFT.deploy(maxSupply);
