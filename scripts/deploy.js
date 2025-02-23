@@ -1,15 +1,14 @@
-const hre = require("hardhat");
+const { ethers } = require("hardhat");
 
 async function main() {
-  const maxSupply = 5000; // Change if needed
+  const maxSupply = 5000; // Set your max supply
 
-  // Deploy contract
-  const MonadDogeNFT = await hre.ethers.getContractFactory("MonadDogeNFT");
-  const monadDoge = await MonadDogeNFT.deploy(maxSupply); // Correct deployment
+  const MonadDogeNFT = await ethers.getContractFactory("MonadDogeNFT");
+  const monadDoge = await MonadDogeNFT.deploy(maxSupply);
 
-  await monadDoge.waitForDeployment(); // Corrected function
+  await monadDoge.deployed();
 
-  console.log(`✅ MonadDogeNFT deployed at: ${await monadDoge.getAddress()}`);
+  console.log(`✅ MonadDogeNFT deployed at: ${monadDoge.address}`);
 }
 
 main().catch((error) => {
