@@ -5,13 +5,17 @@ import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract MonadDogeNFT is ERC721URIStorage, Ownable {
-    uint256 public maxSupply;  // Owner can set max supply
-    uint256 public mintPrice = 1 ether; // Default mint price (1 MON)
-    uint256 private _tokenIdCounter = 0; // NFT ID tracker
-    string public baseURI = "https://gateway.pinata.cloud/ipfs/bafybeig7ckgnpsqefislvfye7gqmoun46w76a355tdxbmmlgms4bl25dsy/";
+    uint256 public maxSupply;  
+    uint256 public constant mintPrice = 1 ether; // 🔹 Fixed mint price (1 MON)
+    uint256 private _tokenIdCounter; 
 
-    constructor(uint256 _maxSupply) ERC721("MonadDoge", "MDOGE") Ownable(msg.sender) {
-        maxSupply = _maxSupply;  // Owner sets supply at deployment
+    string private _baseTokenURI; 
+
+    constructor(uint256 _maxSupply, string memory baseURI_) 
+        ERC721("MonadDoge", "MDOGE") Ownable(msg.sender) 
+    {
+        maxSupply = _maxSupply;  
+        _baseTokenURI = baseURI_; 
     }
 
     // 🔹 Owner can change max supply (only if current supply is less)
@@ -20,32 +24,31 @@ contract MonadDogeNFT is ERC721URIStorage, Ownable {
         maxSupply = newMaxSupply;
     }
 
-    // 🔹 Owner can change mint price
-    function setMintPrice(uint256 newPrice) public onlyOwner {
-        mintPrice = newPrice;
-    }
-
-    // 🔹 Owner can update Base URI (if needed)
+    // 🔹 Owner can update Base URI
     function setBaseURI(string memory newBaseURI) public onlyOwner {
-        baseURI = newBaseURI;
+        _baseTokenURI = newBaseURI;
     }
 
-    // 🔹 Mint Multiple NFTs (User can specify quantity)
+    // 🔹 Override OpenZeppelin `_baseURI()`
+    function _baseURI() internal view override returns (string memory) {
+        return _baseTokenURI;
+    }
+
+    // 🔹 Public Minting (Unlimited Minting Allowed)
     function mintNFT(uint256 quantity) public payable {
         require(quantity > 0, "Must mint at least 1 NFT");
         require(_tokenIdCounter + quantity <= maxSupply, "Exceeds max supply");
         require(msg.value >= mintPrice * quantity, "Insufficient funds");
 
         for (uint256 i = 0; i < quantity; i++) {
-            uint256 newTokenId = _tokenIdCounter + i; // Fix: Ensure token ID increments correctly
+            uint256 newTokenId = _tokenIdCounter; 
+            _tokenIdCounter++; 
 
-            _safeMint(msg.sender, newTokenId); // Transfer NFT to minter
-            _setTokenURI(newTokenId, string(abi.encodePacked(baseURI, uint2str(newTokenId), ".json")));
+            _safeMint(msg.sender, newTokenId);
+            _setTokenURI(newTokenId, string(abi.encodePacked(_baseTokenURI, uint2str(newTokenId), ".json")));
         }
 
-        _tokenIdCounter += quantity; // Fix: Ensure _tokenIdCounter updates after minting
-
-        // 🔹 Automatically send mint fee to owner
+        // 🔹 Send mint fee directly to contract owner
         payable(owner()).transfer(msg.value);
     }
 
