@@ -5,10 +5,10 @@ const { ethers } = require("hardhat");
 const path = require("path");
 const contractABI = require(path.join(__dirname, "../artifacts/contracts/NFT.sol/MonadDogeNFT.json")).abi;
 
-const PRIVATE_KEY = process.env.PRIVATE_KEY; // User's private key from .envUser
-const CONTRACT_ADDRESS = process.env.CONTRACT_ADDRESS; // Contract address from .env
-const RPC_URL = "https://testnet-rpc.monad.xyz"; // Monad Testnet RPC
-const MINT_AMOUNT = parseInt(process.env.MINT_AMOUNT || "1"); // Default to 1 if not provided
+const PRIVATE_KEY = process.env.PRIVATE_KEY;
+const CONTRACT_ADDRESS = process.env.CONTRACT_ADDRESS;
+const RPC_URL = "https://testnet-rpc.monad.xyz";
+const MINT_AMOUNT = BigInt(process.env.MINT_AMOUNT || "1"); // Convert to BigInt
 
 if (!PRIVATE_KEY || !CONTRACT_ADDRESS) {
     console.error("[ERROR] Missing PRIVATE_KEY or CONTRACT_ADDRESS. Check .envUser and .env files.");
@@ -21,15 +21,17 @@ async function mintNFT() {
     const contract = new ethers.Contract(CONTRACT_ADDRESS, contractABI, wallet);
 
     try {
-        console.log(`[INFO] Minting ${MINT_AMOUNT} NFT(s) from contract: ${CONTRACT_ADDRESS}`);
-        console.log(`[INFO] Sending transaction...`);
+        console.log(`[INFO] Fetching mint price...`);
+        const mintPrice = await contract.mintPrice(); // mintPrice is a BigInt
+        const totalCost = mintPrice * MINT_AMOUNT; // Ensure both are BigInt
 
-        for (let i = 0; i < MINT_AMOUNT; i++) {
-            const tx = await contract.mint(wallet.address);
-            console.log(`[SUCCESS] Minting transaction sent: ${tx.hash}`);
-            await tx.wait();
-            console.log(`[SUCCESS] NFT #${i + 1} Minted Successfully!`);
-        }
+        console.log(`[INFO] Minting ${MINT_AMOUNT} NFT(s) from contract: ${CONTRACT_ADDRESS}`);
+        console.log(`[INFO] Sending transaction with value: ${ethers.formatEther(totalCost.toString())} ETH...`);
+
+        const tx = await contract.mintNFT(MINT_AMOUNT, { value: totalCost });
+        console.log(`[SUCCESS] Minting transaction sent: ${tx.hash}`);
+        await tx.wait();
+        console.log(`[SUCCESS] Minted ${MINT_AMOUNT} NFT(s) successfully!`);
     } catch (error) {
         console.error("[ERROR] Minting failed:", error);
     }
