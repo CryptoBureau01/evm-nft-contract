@@ -1,5 +1,5 @@
-# monad-nft
-monad-nft with CryptoBureau 
+# EVM-NFT-Contract
+Evm NFT Contract ( Testing : monad-nft ) with CryptoBureau 
 
 
 # Monad Testnet NFT Contract Deployment Guide
