@@ -240,7 +240,7 @@ verify() {
 
     # Run Hardhat verify command
     echo "[INFO] Verifying contract on MonadTestnet..."
-    if npx hardhat verify --network monadTestnet "$CONTRACT_ADDRESS"; then
+    if npx hardhat verify --network monadTestnet --constructor-args scripts/constructor-args.js "$CONTRACT_ADDRESS"; then
         echo "[SUCCESS] Contract verification completed!"
     else
         echo "[ERROR] Contract verification failed!"
