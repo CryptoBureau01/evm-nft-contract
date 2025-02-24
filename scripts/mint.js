@@ -8,7 +8,7 @@ const contractABI = require(path.join(__dirname, "../artifacts/contracts/NFT.sol
 const USER_PRIVATE_KEY = process.env.PRIVATE_KEY;  
 const CONTRACT_ADDRESS = process.env.CONTRACT_ADDRESS; 
 const RPC_URL = "https://testnet-rpc.monad.xyz"; 
-const MINT_AMOUNT = parseInt(process.env.MINT_AMOUNT || "1"); // Default: 1 NFT
+const MINT_AMOUNT = BigInt(parseInt(process.env.MINT_AMOUNT || "1")); // ✅ Convert to BigInt
 
 if (!USER_PRIVATE_KEY || !CONTRACT_ADDRESS) {
     console.error("[ERROR] Missing PRIVATE_KEY or CONTRACT_ADDRESS. Check .envUser file.");
