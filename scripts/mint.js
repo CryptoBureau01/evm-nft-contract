@@ -5,7 +5,7 @@ const path = require("path");
 const contractABI = require(path.join(__dirname, "../artifacts/contracts/NFT.sol/MonadDogeNFT.json")).abi;
 
 // ✅ Fetch values from .envUser
-const USER_PRIVATE_KEY = process.env.PRIVATE_KEY;  
+const USER_PRIVATE_KEY = process.env.PRIVATE_KEY?.trim();  // Ensure no extra spaces
 const CONTRACT_ADDRESS = process.env.CONTRACT_ADDRESS; 
 const RPC_URL = "https://testnet-rpc.monad.xyz"; 
 const MINT_AMOUNT = BigInt(parseInt(process.env.MINT_AMOUNT || "1")); // ✅ Convert to BigInt
@@ -18,6 +18,14 @@ if (!USER_PRIVATE_KEY || !CONTRACT_ADDRESS) {
 async function mintNFT() {
     const provider = new ethers.JsonRpcProvider(RPC_URL);
     const wallet = new ethers.Wallet(USER_PRIVATE_KEY, provider); // ✅ Uses the user’s wallet
+    console.log(`[DEBUG] Loaded Wallet Address (Should be User): ${wallet.address}`);
+
+    // ✅ Check if wallet matches `.envUser`
+    if (wallet.address !== process.env.USER_ADDRESS) {
+        console.error("[ERROR] Wallet Address does NOT match user! Check .envUser file.");
+        process.exit(1);
+    }
+    
     const contract = new ethers.Contract(CONTRACT_ADDRESS, contractABI, wallet);
 
     console.log(`[DEBUG] Using wallet address: ${wallet.address}`);
