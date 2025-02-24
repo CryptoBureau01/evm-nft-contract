@@ -254,38 +254,71 @@ verify() {
 
 
 
+user_priv() {
+    CONTRACT_DIR="/root/evm-nft-contract"
+    ENV_FILE="$CONTRACT_DIR/.envUser"
+
+    echo "[INFO] Enter your private key:"
+    read -s USER_PRIVATE_KEY
+
+    # Ensure private key starts with 0x
+    if [[ "$USER_PRIVATE_KEY" != 0x* ]]; then
+        USER_PRIVATE_KEY="0x$USER_PRIVATE_KEY"
+    fi
+
+    # Save private key to .envUser
+    sed -i "s|^PRIVATE_KEY=.*|PRIVATE_KEY=$USER_PRIVATE_KEY|" "$ENV_FILE"
+
+    # Print user wallet address
+    USER_ADDRESS=$(npx hardhat --network monadTestnet run scripts/getAddress.js)
+
+    echo "[INFO] Your wallet address: $USER_ADDRESS"
+
+    # Call master function at the end
+    master
+}
+
+
 mint_nft() {
     CONTRACT_DIR="/root/evm-nft-contract"
     ENV_FILE="$CONTRACT_DIR/.envUser"
 
-    # Load CONTRACT_ADDRESS from .envUser
+    # Load environment variables
     source "$ENV_FILE"
 
-    echo "[INFO] Checking CONTRACT_ADDRESS in .envUser..."
-    echo "[INFO] CONTRACT_ADDRESS found: $CONTRACT_ADDRESS"
+    if [[ -z "$PRIVATE_KEY" ]]; then
+        echo "[ERROR] Private key not found! Run 'user_priv' first."
+        exit 1
+    fi
 
-    # Prompt user to enter their private key
-    read -s -p "Enter your private key: " USER_PRIVATE_KEY
-    echo ""
+    if [[ -z "$CONTRACT_ADDRESS" ]]; then
+        echo "[ERROR] CONTRACT_ADDRESS not found in .envUser!"
+        exit 1
+    fi
 
-    # Save the private key in .envUser, ensuring it starts with 0x
-    sed -i "s|^PRIVATE_KEY=.*|PRIVATE_KEY=0x$USER_PRIVATE_KEY|" "$ENV_FILE"
+    echo "[INFO] Contract Address: $CONTRACT_ADDRESS"
 
-    # Prompt user to enter the number of NFTs to mint
-    read -p "Enter the number of NFTs to mint: " NFT_COUNT
-    echo "[INFO] Minting $NFT_COUNT NFT(s)..."
-
-    # Start the minting process
-    cd "$CONTRACT_DIR" || { echo "[ERROR] Failed to enter contract directory"; exit 1; }
+    # Fetch user wallet address directly from PRIVATE_KEY
+    USER_ADDRESS=$(node -e "
+        const { Wallet } = require('ethers');
+        const wallet = new Wallet('$PRIVATE_KEY');
+        console.log(wallet.address);
+    ")
     
+    echo "[INFO] Your Wallet Address: $USER_ADDRESS"
+
+    # Prompt for NFT count
+    read -p "Enter the number of NFTs to mint: " NFT_COUNT
+
     # Validate mint amount (must be a positive integer)
     if ! [[ "$NFT_COUNT" =~ ^[1-9][0-9]*$ ]]; then
         echo "[ERROR] Invalid mint amount! Enter a positive number."
         exit 1
     fi
 
+    echo "[INFO] Minting $NFT_COUNT NFT(s)..."
+
     # Run the mint function using Hardhat
-    echo "[INFO] Minting $MINT_AMOUNT NFT(s)..."
     if NFT_COUNT="$NFT_COUNT" npx hardhat run scripts/mint.js --network monadTestnet; then
         echo "[SUCCESS] Minting completed successfully!"
     else
@@ -303,12 +336,13 @@ mint_nft() {
 
 
 
-
 # Function to display menu and prompt user for input
 master() {
     print_info "==============================="
     print_info "    EVM Contract Tool Menu     "
     print_info "==============================="
+    print_info ""
+    print_info "!========Owner Deploy NFT========!"
     print_info ""
     print_info "1. Install-Dependency"
     print_info "2. Contract-Setup"
@@ -316,17 +350,18 @@ master() {
     print_info "4. Deploy-Contract"
     print_info "5. Verify-Contract"
     print_info ""
-    print_info "!=============================!"
+    print_info "!========User Mint NFT========!"
     print_info ""
-    print_info "6. Mint-NFT"
-    print_info "7. Exit"
+    print_info "6. Set-User"
+    print_info "7. Mint-NFT"
+    print_info "8. Exit"
     print_info ""
     print_info "==============================="
     print_info " Created By : CB-Master "
     print_info "==============================="
     print_info ""
     
-    read -p "Enter your choice (1 or 7): " user_choice
+    read -p "Enter your choice (1 or 8): " user_choice
 
     case $user_choice in
         1)
@@ -344,14 +379,17 @@ master() {
         5)
             verify
             ;;
-        6)
-            mint_nft
+        6)  
+            user_priv
             ;;
         7)
+            mint_nft
+            ;;
+        8)
             exit 0  # Exit the script after breaking the loop
             ;;
         *)
-            print_error "Invalid choice. Please enter 1 or 7 : "
+            print_error "Invalid choice. Please enter 1 or 8 : "
             ;;
     esac
 }
