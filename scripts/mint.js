@@ -18,7 +18,8 @@ if (!USER_PRIVATE_KEY || !CONTRACT_ADDRESS) {
 async function mintNFT() {
     const provider = new ethers.JsonRpcProvider(RPC_URL);
     const wallet = new ethers.Wallet(USER_PRIVATE_KEY, provider); // ✅ Uses the user’s wallet
-    console.log(`[DEBUG] Loaded Wallet Address (Should be User): ${wallet.address}`);
+    
+    console.log(`[DEBUG] Minter Wallet Address (Transaction Sender): ${wallet.address}`);
 
     // ✅ Check if wallet matches `.envUser`
     if (wallet.address !== process.env.USER_ADDRESS) {
