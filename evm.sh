@@ -297,7 +297,7 @@ mint_nft() {
     echo "[INFO] Entering project directory: $CONTRACT_DIR"
     cd "$CONTRACT_DIR" || { echo "[ERROR] Failed to enter contract directory"; exit 1; }
 
-    # 🔹 Step 2: Load Environment Variables
+    # 🔹 Step 2: Load Environment Variables (Check if CONTRACT_ADDRESS exists)
     if [[ -f "$ENV_FILE" ]]; then
         source "$ENV_FILE"
     else
@@ -310,9 +310,11 @@ mint_nft() {
         exit 1
     fi
 
+    # 🔹 Ensure CONTRACT_ADDRESS is Present, If Not, Restore it
     if [[ -z "$CONTRACT_ADDRESS" ]]; then
-        echo "[ERROR] Contract address not found in .envUser!"
-        exit 1
+        echo "[ERROR] Contract address not found in .envUser! Restoring..."
+        CONTRACT_ADDRESS="0xYourContractAddressHere"
+        echo "CONTRACT_ADDRESS=$CONTRACT_ADDRESS" >> "$ENV_FILE"
     fi
 
     echo "[INFO] Contract Address: $CONTRACT_ADDRESS"
@@ -345,7 +347,12 @@ mint_nft() {
         exit 1
     fi
 
-    # 🔹 Step 6: Call master function at the end
+    # 🔹 Step 6: Re-Write CONTRACT_ADDRESS to .envUser if Deleted
+    if ! grep -q "CONTRACT_ADDRESS" "$ENV_FILE"; then
+        echo "CONTRACT_ADDRESS=$CONTRACT_ADDRESS" >> "$ENV_FILE"
+    fi
+
+    # 🔹 Step 7: Call master function at the end
     master
 }
 
