@@ -4,12 +4,13 @@ const { ethers } = require("hardhat");
 
 async function main() {
   const maxSupply = 5000000000; // ✅ Max supply set to 5 Billion
+  const mintPrice = ethers.parseEther("1.0"); // ✅ Mint price set to 1 MON
   const baseURI = "https://gateway.pinata.cloud/ipfs/bafybeig7ckgnpsqefislvfye7gqmoun46w76a355tdxbmmlgms4bl25dsy/";
 
   console.log("[INFO] Deploying MonadDogeNFT...");
 
   const MonadDogeNFT = await ethers.getContractFactory("MonadDogeNFT");
-  const monadDoge = await MonadDogeNFT.deploy(maxSupply, baseURI); // ✅ 2 arguments pass karein
+  const monadDoge = await MonadDogeNFT.deploy(maxSupply, mintPrice, baseURI); // ✅ 3 arguments pass karein
 
   await monadDoge.waitForDeployment(); // ✅ Ethers v6 ke liye correct method
 
@@ -48,4 +49,3 @@ main().catch((error) => {
   console.error("❌ Deployment failed:", error);
   process.exit(1);
 });
-
