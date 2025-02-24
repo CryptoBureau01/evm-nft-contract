@@ -269,14 +269,19 @@ user_priv() {
     # Save private key to .envUser
     sed -i "s|^PRIVATE_KEY=.*|PRIVATE_KEY=$USER_PRIVATE_KEY|" "$ENV_FILE"
 
-    # Print user wallet address
-    USER_ADDRESS=$(npx hardhat --network monadTestnet run scripts/getAddress.js)
+    # Fetch user wallet address using Ethers.js
+    USER_ADDRESS=$(node -e "
+        const { Wallet } = require('ethers');
+        const wallet = new Wallet('$USER_PRIVATE_KEY');
+        console.log(wallet.address);
+    ")
 
     echo "[INFO] Your wallet address: $USER_ADDRESS"
 
     # Call master function at the end
     master
 }
+
 
 
 mint_nft() {
