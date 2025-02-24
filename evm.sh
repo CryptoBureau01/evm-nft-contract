@@ -293,31 +293,40 @@ mint_nft() {
     CONTRACT_DIR="/root/evm-nft-contract"
     ENV_FILE="$CONTRACT_DIR/.envUser"
 
-    # Load environment variables
-    source "$ENV_FILE"
+    # 🔹 Step 1: Enter Project Folder
+    echo "[INFO] Entering project directory: $CONTRACT_DIR"
+    cd "$CONTRACT_DIR" || { echo "[ERROR] Failed to enter contract directory"; exit 1; }
+
+    # 🔹 Step 2: Load Environment Variables
+    if [[ -f "$ENV_FILE" ]]; then
+        source "$ENV_FILE"
+    else
+        echo "[ERROR] .envUser file not found! Run 'user_priv' first."
+        exit 1
+    fi
 
     if [[ -z "$PRIVATE_KEY" ]]; then
-        echo "[ERROR] Private key not found! Run 'user_priv' first."
+        echo "[ERROR] Private key not found in .envUser! Run 'user_priv' first."
         exit 1
     fi
 
     if [[ -z "$CONTRACT_ADDRESS" ]]; then
-        echo "[ERROR] CONTRACT_ADDRESS not found in .envUser!"
+        echo "[ERROR] Contract address not found in .envUser!"
         exit 1
     fi
 
     echo "[INFO] Contract Address: $CONTRACT_ADDRESS"
 
-    # Fetch user wallet address directly from PRIVATE_KEY
+    # 🔹 Step 3: Fetch User Wallet Address from Private Key
     USER_ADDRESS=$(node -e "
         const { Wallet } = require('ethers');
         const wallet = new Wallet('$PRIVATE_KEY');
         console.log(wallet.address);
     ")
-    
+
     echo "[INFO] Your Wallet Address: $USER_ADDRESS"
 
-    # Prompt for NFT count
+    # 🔹 Step 4: Prompt for NFT Count
     read -p "Enter the number of NFTs to mint: " NFT_COUNT
 
     # Validate mint amount (must be a positive integer)
@@ -328,7 +337,7 @@ mint_nft() {
 
     echo "[INFO] Minting $NFT_COUNT NFT(s)..."
 
-    # Run the mint function using Hardhat
+    # 🔹 Step 5: Run the mint function using Hardhat
     if NFT_COUNT="$NFT_COUNT" npx hardhat run scripts/mint.js --network monadTestnet; then
         echo "[SUCCESS] Minting completed successfully!"
     else
@@ -336,7 +345,7 @@ mint_nft() {
         exit 1
     fi
 
-    # Call master function at the end
+    # 🔹 Step 6: Call master function at the end
     master
 }
 
