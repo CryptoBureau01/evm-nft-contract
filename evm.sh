@@ -289,61 +289,19 @@ user_priv() {
 
 mint_nft() {
     CONTRACT_DIR="/root/evm-nft-contract"
-    ENV_FILE="$CONTRACT_DIR/.envUser"
 
     # 🔹 Step 1: Enter Project Folder
     echo "[INFO] Entering project directory: $CONTRACT_DIR"
     cd "$CONTRACT_DIR" || { echo "[ERROR] Failed to enter contract directory"; exit 1; }
 
-    # 🔹 Step 2: Load Environment Variables (Check if CONTRACT_ADDRESS exists)
-    if [[ -f "$ENV_FILE" ]]; then
-        source "$ENV_FILE"
+    # 🔹 Step 2: Run `mint.js` Directly
+    echo "[INFO] Running mint.js..."
+    if node scripts/mint.js; then
+        echo -e "\n✅ [SUCCESS] NFT Minted Successfully! 🎉🚀\n"
     else
-        echo "[ERROR] .envUser file not found! Run 'user_priv' first."
+        echo -e "\n❌ [ERROR] Minting Failed! Check logs. ⚠️\n"
         exit 1
     fi
-
-    if [[ -z "$PRIVATE_KEY" ]]; then
-        echo "[ERROR] Private key not found in .envUser! Run 'user_priv' first."
-        exit 1
-    fi
-
-    # 🔹 Ensure CONTRACT_ADDRESS is Present, If Not, Restore it
-    if [[ -z "$CONTRACT_ADDRESS" ]]; then
-        echo "[ERROR] Contract address not found in .envUser! Restoring..."
-        CONTRACT_ADDRESS="0xYourContractAddressHere"
-        echo "CONTRACT_ADDRESS=$CONTRACT_ADDRESS" >> "$ENV_FILE"
-    fi
-
-    echo "[INFO] Contract Address: $CONTRACT_ADDRESS"
-
-    # 🔹 Step 3: Fetch User Wallet Address from Private Key
-    USER_ADDRESS=$(node -e "
-        const { Wallet } = require('ethers');
-        const wallet = new Wallet('$PRIVATE_KEY');
-        console.log(wallet.address);
-    ")
-
-    echo "[INFO] Your Wallet Address: $USER_ADDRESS"
-
-    # 🔹 Step 4: Directly Mint NFT Without User Input
-    echo "[INFO] Minting 1 NFT..."
-    
-    # 🔹 Step 5: Run the mint function using Hardhat
-    if npx hardhat run scripts/mint.js --network monadTestnet; then
-        echo "[SUCCESS] Minting completed successfully!"
-    else
-        echo "[ERROR] Minting failed! Check Hardhat logs for details."
-        exit 1
-    fi
-
-    # 🔹 Step 6: Re-Write CONTRACT_ADDRESS to .envUser if Deleted
-    if ! grep -q "CONTRACT_ADDRESS" "$ENV_FILE"; then
-        echo "CONTRACT_ADDRESS=$CONTRACT_ADDRESS" >> "$ENV_FILE"
-    fi
-
-    # 🔹 Step 7: Call master function at the end
-    master
 }
 
 
