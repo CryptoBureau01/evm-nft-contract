@@ -287,8 +287,6 @@ user_priv() {
 }
 
 
-
-
 mint_nft() {
     CONTRACT_DIR="/root/evm-nft-contract"
     ENV_FILE="$CONTRACT_DIR/.envUser"
@@ -328,19 +326,11 @@ mint_nft() {
 
     echo "[INFO] Your Wallet Address: $USER_ADDRESS"
 
-    # 🔹 Step 4: Prompt for NFT Count
-    read -p "Enter the number of NFTs to mint: " NFT_COUNT
-
-    # Validate mint amount (must be a positive integer)
-    if ! [[ "$NFT_COUNT" =~ ^[1-9][0-9]*$ ]]; then
-        echo "[ERROR] Invalid mint amount! Enter a positive number."
-        exit 1
-    fi
-
-    echo "[INFO] Minting $NFT_COUNT NFT(s)..."
-
+    # 🔹 Step 4: Directly Mint NFT Without User Input
+    echo "[INFO] Minting 1 NFT..."
+    
     # 🔹 Step 5: Run the mint function using Hardhat
-    if NFT_COUNT="$NFT_COUNT" npx hardhat run scripts/mint.js --network monadTestnet; then
+    if npx hardhat run scripts/mint.js --network monadTestnet; then
         echo "[SUCCESS] Minting completed successfully!"
     else
         echo "[ERROR] Minting failed! Check Hardhat logs for details."
@@ -355,10 +345,6 @@ mint_nft() {
     # 🔹 Step 7: Call master function at the end
     master
 }
-
-
-
-
 
 
 
