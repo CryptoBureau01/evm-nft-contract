@@ -11,5 +11,5 @@ cd $HOME && wget https://raw.githubusercontent.com/CryptoBureau01/evm-nft-contra
 
 ## Conclusion
 
-You have successfully deployed and verified your NFT contract on the Monad Testnet. If you encounter any issues, ensure all dependencies are installed correctly and that you are using the correct network configurations.
+You have successfully deployed and verified your NFT contract on the EVM Testnet. If you encounter any issues, ensure all dependencies are installed correctly and that you are using the correct network configurations.
 
