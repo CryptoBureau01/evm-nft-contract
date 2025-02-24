@@ -264,20 +264,22 @@ mint_nft() {
     echo "[INFO] Checking CONTRACT_ADDRESS in .envUser..."
     echo "[INFO] CONTRACT_ADDRESS found: $CONTRACT_ADDRESS"
 
-    # Prompt the user to enter their private key
+    # Prompt user to enter their private key
     read -s -p "Enter your private key: " USER_PRIVATE_KEY
     echo ""
 
     # Save the private key in .envUser, ensuring it starts with 0x
     sed -i "s|^PRIVATE_KEY=.*|PRIVATE_KEY=0x$USER_PRIVATE_KEY|" "$ENV_FILE"
 
-    # Prompt the user to enter the number of NFTs to mint
+    # Prompt user to enter the number of NFTs to mint
     read -p "Enter the number of NFTs to mint: " NFT_COUNT
     echo "[INFO] Minting $NFT_COUNT NFT(s)..."
 
     # Start the minting process
     cd "$CONTRACT_DIR" || { echo "[ERROR] Failed to enter contract directory"; exit 1; }
-    if npx hardhat run scripts/mint.js --network monadTestnet --nft-count "$NFT_COUNT"; then
+    
+    # Run Hardhat script correctly
+    if npx hardhat run scripts/mint.js --network monadTestnet "$NFT_COUNT"; then
         echo "[SUCCESS] $NFT_COUNT NFT(s) minted successfully!"
     else
         echo "[ERROR] Minting failed! Check Hardhat logs for details."
