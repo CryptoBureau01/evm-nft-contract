@@ -273,13 +273,23 @@ mint_nft() {
 
     # Prompt user to enter the number of NFTs to mint
     read -p "Enter the number of NFTs to mint: " NFT_COUNT
+
+    # Validate NFT_COUNT (must be a number)
+    if ! [[ "$NFT_COUNT" =~ ^[0-9]+$ ]]; then
+        echo "[ERROR] Invalid input! Please enter a valid number."
+        exit 1
+    fi
+
     echo "[INFO] Minting $NFT_COUNT NFT(s)..."
+
+    # Save the mint amount in .envUser
+    sed -i "s|^MINT_AMOUNT=.*|MINT_AMOUNT=$NFT_COUNT|" "$ENV_FILE"
 
     # Start the minting process
     cd "$CONTRACT_DIR" || { echo "[ERROR] Failed to enter contract directory"; exit 1; }
     
-    # Run Hardhat script correctly
-    if npx hardhat run scripts/mint.js --network monadTestnet "$NFT_COUNT"; then
+    # Run Hardhat script
+    if npx hardhat run scripts/mint.js --network monadTestnet; then
         echo "[SUCCESS] $NFT_COUNT NFT(s) minted successfully!"
     else
         echo "[ERROR] Minting failed! Check Hardhat logs for details."
