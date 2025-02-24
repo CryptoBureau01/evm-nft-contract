@@ -16,6 +16,7 @@ contract MonadDogeNFT is ERC721URIStorage, Ownable {
     {
         maxSupply = _maxSupply;  
         _baseTokenURI = baseURI_; 
+        _tokenIdCounter = 0; // 🔹 Ensure counter starts from 0
     }
 
     // 🔹 Owner can change max supply (only if current supply is less)
@@ -34,18 +35,18 @@ contract MonadDogeNFT is ERC721URIStorage, Ownable {
         return _baseTokenURI;
     }
 
-    // 🔹 Public Minting (Unlimited Minting Allowed)
+    // 🔹 Public Minting (Supports Multiple Minting)
     function mintNFT(uint256 quantity) public payable {
         require(quantity > 0, "Must mint at least 1 NFT");
         require(_tokenIdCounter + quantity <= maxSupply, "Exceeds max supply");
         require(msg.value >= mintPrice * quantity, "Insufficient funds");
 
         for (uint256 i = 0; i < quantity; i++) {
-            uint256 newTokenId = _tokenIdCounter; 
-            _tokenIdCounter++; 
-
+            uint256 newTokenId = _tokenIdCounter;
             _safeMint(msg.sender, newTokenId);
             _setTokenURI(newTokenId, string(abi.encodePacked(_baseTokenURI, uint2str(newTokenId), ".json")));
+
+            _tokenIdCounter++; // 🔹 Corrected: Ensure counter updates after each mint
         }
 
         // 🔹 Send mint fee directly to contract owner
