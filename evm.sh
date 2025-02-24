@@ -302,6 +302,9 @@ mint_nft() {
         echo -e "\n❌ [ERROR] Minting Failed! Check logs. ⚠️\n"
         exit 1
     fi
+
+    # 🔹 Step 3: Call master function
+    master
 }
 
 
