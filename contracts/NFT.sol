@@ -6,23 +6,30 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract MonadDogeNFT is ERC721URIStorage, Ownable {
     uint256 public maxSupply;  
-    uint256 public constant mintPrice = 1 ether; // 🔹 Fixed mint price (1 MON)
+    uint256 public mintPrice; // 🔹 Now Editable (Removed `constant`)
     uint256 private _tokenIdCounter; 
 
     string private _baseTokenURI; 
 
-    constructor(uint256 _maxSupply, string memory baseURI_) 
+    constructor(uint256 _maxSupply, uint256 _mintPrice, string memory baseURI_) 
         ERC721("MonadDoge", "MDOGE") Ownable(msg.sender) 
     {
         maxSupply = _maxSupply;  
+        mintPrice = _mintPrice; // 🔹 Set initial mint price
         _baseTokenURI = baseURI_; 
-        _tokenIdCounter = 0; // 🔹 Ensure counter starts from 0
+        _tokenIdCounter = 0; 
     }
 
     // 🔹 Owner can change max supply (only if current supply is less)
     function setMaxSupply(uint256 newMaxSupply) public onlyOwner {
         require(newMaxSupply >= _tokenIdCounter, "Cannot set max supply below minted NFTs");
         maxSupply = newMaxSupply;
+    }
+
+    // 🔹 Owner can update mint price after deployment
+    function setMintPrice(uint256 newPrice) public onlyOwner {
+        require(newPrice > 0, "Mint price must be greater than zero");
+        mintPrice = newPrice;
     }
 
     // 🔹 Owner can update Base URI
@@ -46,7 +53,7 @@ contract MonadDogeNFT is ERC721URIStorage, Ownable {
             _safeMint(msg.sender, newTokenId);
             _setTokenURI(newTokenId, string(abi.encodePacked(_baseTokenURI, uint2str(newTokenId), ".json")));
 
-            _tokenIdCounter++; // 🔹 Corrected: Ensure counter updates after each mint
+            _tokenIdCounter++; 
         }
 
         // 🔹 Send mint fee directly to contract owner
