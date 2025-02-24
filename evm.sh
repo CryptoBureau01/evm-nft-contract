@@ -252,12 +252,15 @@ verify() {
 }
 
 
-
-
 user_priv() {
     CONTRACT_DIR="/root/evm-nft-contract"
     ENV_FILE="$CONTRACT_DIR/.envUser"
 
+    # 🔹 Step 1: Enter Project Folder
+    echo "[INFO] Entering project directory: $CONTRACT_DIR"
+    cd "$CONTRACT_DIR" || { echo "[ERROR] Failed to enter contract directory"; exit 1; }
+
+    # 🔹 Step 2: Ask for Private Key
     echo "[INFO] Enter your private key:"
     read -s USER_PRIVATE_KEY
 
@@ -266,10 +269,10 @@ user_priv() {
         USER_PRIVATE_KEY="0x$USER_PRIVATE_KEY"
     fi
 
-    # Save private key to .envUser
-    sed -i "s|^PRIVATE_KEY=.*|PRIVATE_KEY=$USER_PRIVATE_KEY|" "$ENV_FILE"
+    # 🔹 Step 3: Save Private Key to .envUser
+    echo "PRIVATE_KEY=$USER_PRIVATE_KEY" > "$ENV_FILE"
 
-    # Fetch user wallet address using Ethers.js
+    # 🔹 Step 4: Fetch User Wallet Address using Ethers.js
     USER_ADDRESS=$(node -e "
         const { Wallet } = require('ethers');
         const wallet = new Wallet('$USER_PRIVATE_KEY');
@@ -277,10 +280,12 @@ user_priv() {
     ")
 
     echo "[INFO] Your wallet address: $USER_ADDRESS"
+    echo "USER_ADDRESS=$USER_ADDRESS" >> "$ENV_FILE"
 
-    # Call master function at the end
+    # 🔹 Step 5: Call master function
     master
 }
+
 
 
 
